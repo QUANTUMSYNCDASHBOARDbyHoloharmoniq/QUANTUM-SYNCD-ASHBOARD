@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumSync Dashboard™ - HoloHarmoniq Ltd. London</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard">
+        <div class="section" id="wavefunction">
+            <h2>Ψ(t) Wavefunction</h2>
+            <canvas id="psiChart"></canvas>
+        </div>
+        <div class="section" id="spectrum">
+            <h2>Resonance Spectrum</h2>
+            <canvas id="fftChart"></canvas>
+        </div>
+        <div class="section" id="biofeedback">
+            <h2>Biofeedback & Gamma Oscillation</h2>
+            <canvas id="eegChart"></canvas>
+            <div class="status">HRV: <span id="hrv">0</span></div>
+            <div class="status">GSR: <span id="gsr">0</span></div>
+            <div class="status">Gamma Oscillation (Ion-Photon Level): <span id="gammaOscillation">0</span> Hz</div>
+            <div id="photonParticles" style="position: relative; width: 100%; height: 50px;"></div>
+        </div>
+        <div class="section" id="plasmaball">
+            <h2>Quantum Plasma Sphere</h2>
+            <div id="threeContainer" style="width:100%; height:300px;"></div>
+            <div class="footer-text">QuantumSync Dashboard™<br>by Holoharmoniq Ltd. London</div>
+        </div>
+        <div class="section" id="pulseMonitor">
+            <h2>Photon Pulse Monitor</h2>
+            <div class="pulse-container">
+                <div id="pulseParticles" style="position: relative; width: 100%; height: 100px;"></div>
+            </div>
+        </div>
+        <div class="section" id="singularityDetector">
+            <h2>Photon Singularity Detector</h2>
+            <div class="singularity-container">
+                <div id="singularityParticles" style="position: relative; width: 100%; height: 100px;"></div>
+                <div class="status">Singularity Intensity: <span id="singularityLevel">0</span> μS</div>
+            </div>
+        </div>
+        <div class="section" id="quantumVortex">
+            <h2>Quantum Resonance Vortex</h2>
+            <canvas id="vortexCanvas" style="width: 100%; height: 200px;"></canvas>
+            <div class="status">Resonance Intensity: <span id="resonanceIntensity">0</span> nR</div>
+        </div>
+        <div class="section" id="dimensionLevel">
+            <h2>Dimension Level Meter</h2>
+            <div id="dimensionParticles" style="position: relative; width: 100%; height: 100px;"></div>
+            <div class="status">Dimension Level: <span id="dimensionQuantum">0</span> Dq</div>
+        </div>
+        <div class="section controls" id="controls">
+            <h2>Control Panel</h2>
+            <label for="freqSlider">Frequency (Hz): <span id="freqValue">432</span></label>
+            <input type="range" id="freqSlider" min="7.8" max="528" step="0.1" value="432">
+            <button id="autoTune">Resonance Auto-Tuning</button>
+            <div class="neurostate-controls">
+                <h3>NeuroState Modes</h3>
+                <button class="neurostate-btn" data-mode="sleep">Sleep Preparation</button>
+                <button class="neurostate-btn" data-mode="focus">Focus Mode</button>
+                <button class="neurostate-btn" data-mode="healing">Healing Waves</button>
+            </div>
+            <div class="status">AI Status: <span id="aiStatus">Initializing QuantumSync™</span></div>
+            <audio id="backgroundAudio" loop></audio>
+        </div>
+    </div>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Exo 2', sans-serif;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png'), linear-gradient(135deg, #0d0d2b, #1a1a3d);
+            background-size: cover, 100%;
+            color: #ffffff;
+            overflow-x: hidden;
+            animation: cosmicShift 20s infinite alternate;
+        }
+
+        @keyframes cosmicShift {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 10px rgba(255, 0, 204, 0.2);
+            border: 2px solid rgba(0, 255, 204, 0.5);
+            min-height: 200px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 0, 204, 0.1), transparent);
+            opacity: 0.5;
+            z-index: 0;
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(255, 0, 204, 0.7), inset 0 0 15px rgba(0, 255, 204, 0.4);
+        }
+
+        .section > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .section canvas {
+            width: 100% !important;
+            height: 200px !important;
+            display: block;
+        }
+
+        .footer-text {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #ffffff;
+            text-align: center;
+            text-shadow: 0 0 5px rgba(0, 255, 204, 0.7);
+            line-height: 1.5;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+            -webkit-appearance: none;
+            height: 10px;
+            background: linear-gradient(to right, #ff00cc, #00ffcc);
+            border-radius: 5px;
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.7);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #00ffcc;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 15px #00ffcc, 0 0 5px #ffffff;
+            transition: transform 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        button {
+            padding: 12px 20px;
+            background: linear-gradient(45deg, #ff00cc, #00ffcc);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 700;
+            color: #1a1a3d;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(255, 0, 204, 0.7);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.9);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background: linear-gradient(45deg, #666, #444);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .neurostate-controls {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .neurostate-btn {
+            padding: 10px 15px;
+            background: linear-gradient(45deg, #ff00cc, #00ffcc);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 700;
+            color: #1a1a3d;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(255, 0, 204, 0.7);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .neurostate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: 0.5s;
+        }
+
+        .neurostate-btn:hover::before {
+            left: 100%;
+        }
+
+        .neurostate-btn:hover {
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.9);
+            transform: translateY(-2px);
+        }
+
+        .neurostate-btn.active {
+            background: linear-gradient(45deg, #00ffcc, #ff00cc);
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.9);
+            animation: pulseButton 1s infinite alternate;
+        }
+
+        @keyframes pulseButton {
+            0% { box-shadow: 0 0 10px rgba(0, 255, 204, 0.5); }
+            100% { box-shadow: 0 0 25px rgba(0, 255, 204, 1); }
+        }
+
+        .status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #00ffcc;
+            text-shadow: 0 0 5px rgba(0, 255, 204, 0.7);
+            text-align: center;
+        }
+
+        h2, h3 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            text-align: center;
+            color: #00ffcc;
+            text-shadow: 0 0 8px rgba(0, 255, 204, 0.7);
+        }
+
+        #threeContainer, #pulseParticles, #singularityParticles, #photonParticles, #vortexCanvas, #dimensionParticles {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 0, 204, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pulse-container, .singularity-container {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .photon-particle, .pulse-particle, .singularity-particle, .vortex-particle, .dimension-particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #ff00cc;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ff00cc, 0 0 15px #ff00cc;
+            animation: photonPulse 1s infinite alternate;
+        }
+
+        .photon-particle::after, .pulse-particle::after, .singularity-particle::after, .vortex-particle::after, .dimension-particle::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff00cc, transparent);
+            transform: rotate(45deg);
+            opacity: 0.5;
+        }
+
+        .pulse-particle {
+            background: #00ccff;
+            box-shadow: 0 0 8px #00ccff, 0 0 15px #00ccff;
+            animation: pulseBeat 0.5s infinite;
+        }
+
+        .singularity-particle {
+            background: #ff33cc;
+            box-shadow: 0 0 10px #ff33cc, 0 0 20px #ff33cc;
+            animation: singularitySwirl 2s infinite;
+        }
+
+        .vortex-particle, .dimension-particle {
+            background: #ff00cc;
+            box-shadow: 0 0 8px #ff00cc, 0 0 15px #ff00cc;
+        }
+
+        @keyframes photonPulse {
+            0% { transform: scale(1); opacity: 0.7; box-shadow: 0 0 8px #ff00cc; }
+            100% { transform: scale(1.5); opacity: 1; box-shadow: 0 0 15px #ff00cc; }
+        }
+
+        @keyframes pulseBeat {
+            0% { transform: scale(1); opacity: 0.5; box-shadow: 0 0 8px #00ccff; }
+            50% { transform: scale(2); opacity: 1; box-shadow: 0 0 15px #00ccff; }
+            100% { transform: scale(1); opacity: 0.5; box-shadow: 0 0 8px #00ccff; }
+        }
+
+        @keyframes singularitySwirl {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+            50% { transform: translate(15px, 15px) scale(1.5); opacity: 1; }
+            100% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+        }
+
+        @keyframes lambdaPulse {
+            0% { transform: scale(1); opacity: 0.7; box-shadow: 0 0 8px #ff00cc; }
+            50% { transform: scale(1.8); opacity: 1; box-shadow: 0 0 15px #ff00cc; }
+            100% { transform: scale(1); opacity: 0.7; box-shadow: 0 0 8px #ff00cc; }
+        }
+
+        @keyframes gatewayEffect {
+            0% { transform: translate(0, 0); opacity: 1; }
+            50% { transform: translate(20px, 20px); opacity: 0; }
+            100% { transform: translate(0, 0); opacity: 1; }
+        }
+    </style>
+
+    <script>
+        // NeuroState modes configuration without BPM values
+        const neuroStateModes = {
+            sleep: {
+                frequency: 4,
+                color: { h: 0.7, s: 0.8, l: 0.4 },
+                audioSrc: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                description: 'Sleep Preparation Frequency'
+            },
+            focus: {
+                frequency: 40,
+                color: { h: 0.1, s: 0.9, l: 0.5 },
+                audioSrc: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+                description: 'Focus Mode'
+            },
+            healing: {
+                frequency: 432,
+                color: { h: 0.5, s: 0.8, l: 0.6 },
+                audioSrc: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+                description: 'Healing Waves'
+            }
+        };
+
+        // Global variables for control
+        let currentFrequency = 432;
+        let isAutoTuning = false;
+        let simulationInterval;
+        let audioElement;
+        let currentMode = 'healing';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Initializing QuantumSync Dashboard™...");
+            
+            // Initialize audio element
+            audioElement = document.getElementById('backgroundAudio');
+            
+            // Create charts
+            console.log("Creating charts...");
+            const psiChart = initChart('psiChart', '#00ffcc', 'Ψ(t)');
+            const fftChart = initChart('fftChart', '#ff00cc', 'Spectrum');
+            const eegChart = initEEGChart('eegChart');
+            
+            // Initialize 3D plasma sphere
+            console.log("Initializing Three.js plasma sphere...");
+            const threeJS = initThreeJS();
+            
+            // Initialize particles
+            console.log("Initializing particles...");
+            initPhotonParticles();
+            initPulseParticles();
+            initSingularityParticles();
+            initQuantumVortex();
+            initDimensionParticles();
+            
+            // Set up control panel event listeners
+            console.log("Setting up controls...");
+            if (threeJS && threeJS.sphere) {
+                setupControls(threeJS.sphere, psiChart, fftChart);
+                setupNeuroStateControls(threeJS.sphere, psiChart, fftChart);
+            } else {
+                console.error("Three.js initialization failed, controls setup skipped.");
+            }
+            
+            // Start simulation
+            console.log("Starting simulation...");
+            if (threeJS && threeJS.sphere) {
+                startSimulation(psiChart, fftChart, eegChart, threeJS.sphere);
+            } else {
+                console.error("Three.js initialization failed, simulation not started.");
+            }
+            
+            console.log("QuantumSync Dashboard™ Ready!");
+        });
+
+        function initChart(canvasId, color, label) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) {
+                console.error(`Canvas with ID ${canvasId} not found!`);
+                return null;
+            }
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(100).fill(''),
+                    datasets: [{
+                        label: label,
+                        data: Array(100).fill(0),
+                        borderColor: color,
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.5,
+                        pointRadius: 0,
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 0
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: { 
+                            display: true,
+                            grid: { 
+                                color: 'rgba(0, 255, 204, 0.2)',
+                                borderDash: [5, 5]
+                            },
+                            ticks: {
+                                color: '#00ffcc',
+                                font: {
+                                    family: 'Exo 2',
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#00ffcc',
+                                font: {
+                                    family: 'Exo 2',
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initEEGChart(canvasId) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) {
+                console.error(`Canvas with ID ${canvasId} not found!`);
+                return null;
+            }
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(100).fill(''),
+                    datasets: [
+                    {
+                        label: 'Gamma',
+                        data: Array(100).fill(0),
+                        borderColor: '#FFD700',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.5,
+                        pointRadius: 0,
+                        borderDash: [5, 5]
+                    },
+                    {
+                        label: 'Theta',
+                        data: Array(100).fill(''),
+                        borderColor: '#00ccff',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.5,
+                        pointRadius: 0,
+                        borderDash: [5, 5]
+                    }
+                ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 0
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: { 
+                            display: true,
+                            grid: { 
+                                color: 'rgba(0, 255, 204, 0.2)',
+                                borderDash: [5, 5]
+                            },
+                            ticks: {
+                                color: '#00ffcc',
+                                font: {
+                                    family: 'Exo 2',
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#00ffcc',
+                                font: {
+                                    family: 'Exo 2',
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initThreeJS() {
+            const container = document.getElementById('threeContainer');
+            if (!container) {
+                console.error("Three.js container not found!");
+                return null;
+            }
+            
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0d0d2b);
+            
+            const camera = new THREE.PerspectiveCamera(
+                75, 
+                container.clientWidth / container.clientHeight, 
+                0.1, 
+                1000
+            );
+            camera.position.z = 3;
+            
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+            
+            const geometry = new THREE.SphereGeometry(1, 64, 64);
+            const noise = new SimplexNoise();
+            const vertices = geometry.attributes.position.array;
+            for (let i = 0; i < vertices.length; i += 3) {
+                const x = vertices[i];
+                const y = vertices[i + 1];
+                const z = vertices[i + 2];
+                const noiseValue = noise.noise3D(x * 0.5, y * 0.5, z * 0.5 + Date.now() / 10000) * 0.1;
+                const distance = Math.sqrt(x * x + y * y + z * z);
+                vertices[i] += (x / distance) * noiseValue;
+                vertices[i + 1] += (y / distance) * noiseValue;
+                vertices[i + 2] += (z / distance) * noiseValue;
+            }
+            geometry.attributes.position.needsUpdate = true;
+            geometry.computeVertexNormals();
+            
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0.0 },
+                    color: { value: new THREE.Color(0xff00cc) }
+                },
+                vertexShader: `
+                    varying vec3 vNormal;
+                    void main() {
+                        vNormal = normalize(normalMatrix * normal);
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform float time;
+                    uniform vec3 color;
+                    varying vec3 vNormal;
+                    void main() {
+                        float intensity = pow(0.8 - dot(vNormal, vec3(0, 0, 1.0)), 2.0);
+                        vec3 photonGlow = color * (0.5 + 0.5 * sin(time * 2.0 + vNormal.x * 5.0));
+                        gl_FragColor = vec4(photonGlow * intensity, 0.9);
+                    }
+                `,
+                transparent: true,
+                wireframe: true
+            });
+            const sphere = new THREE.Mesh(geometry, material);
+            scene.add(sphere);
+            
+            const auraGeometry = new THREE.SphereGeometry(1.2, 64, 64);
+            const auraMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0.0 },
+                    color: { value: new THREE.Color(0xff00cc) }
+                },
+                vertexShader: `
+                    varying vec3 vNormal;
+                    void main() {
+                        vNormal = normalize(normalMatrix * normal);
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform float time;
+                    uniform vec3 color;
+                    varying vec3 vNormal;
+                    void main() {
+                        float intensity = pow(0.8 - dot(vNormal, vec3(0, 0, 1.0)), 2.0);
+                        vec3 glow = color * (0.3 + 0.3 * sin(time * 3.0));
+                        gl_FragColor = vec4(glow * intensity, 0.5 * (sin(time) * 0.5 + 0.5));
+                    }
+                `,
+                transparent: true,
+                side: THREE.BackSide
+            });
+            const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+            scene.add(aura);
+            
+            const particleCount = 300;
+            const particles = new THREE.Group();
+            for (let i = 0; i < particleCount; i++) {
+                const particle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.015, 8, 8),
+                    new THREE.MeshBasicMaterial({ color: 0xff00cc, transparent: true, opacity: 0.7 })
+                );
+                particle.position.set(
+                    (Math.random() - 0.5) * 3,
+                    (Math.random() - 0.5) * 3,
+                    (Math.random() - 0.5) * 3
+                );
+                particles.add(particle);
+            }
+            scene.add(particles);
+            
+            const light = new THREE.PointLight(0xff00cc, 1, 100);
+            light.position.set(2, 2, 2);
+            scene.add(light);
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                const rotationSpeed = currentFrequency / 1000;
+                sphere.rotation.x += rotationSpeed * 0.5;
+                sphere.rotation.y += rotationSpeed;
+                aura.rotation.x += rotationSpeed * 0.5;
+                aura.rotation.y += rotationSpeed;
+                
+                const dayCycle = Math.sin(Date.now() / (24 * 60 * 60 * 1000) * 2 * Math.PI) * 0.1;
+                const scale = 1 + 0.1 * Math.sin(Date.now() / 500) + dayCycle;
+                sphere.scale.set(scale, scale, scale);
+                aura.scale.set(scale * 1.2, scale * 1.2, scale * 1.2);
+                
+                material.uniforms.time.value = Date.now() / 1000;
+                auraMaterial.uniforms.time.value = Date.now() / 1000;
+                
+                const noise = new SimplexNoise();
+                for (let i = 0; i < vertices.length; i += 3) {
+                    const x = vertices[i];
+                    const y = vertices[i + 1];
+                    const z = vertices[i + 2];
+                    const noiseValue = noise.noise3D(x * 0.5, y * 0.5, z * 0.5 + Date.now() / 10000) * 0.1;
+                    const distance = Math.sqrt(x * x + y * y + z * z);
+                    vertices[i] = (x / distance) * (1 + noiseValue);
+                    vertices[i + 1] = (y / distance) * (1 + noiseValue);
+                    vertices[i + 2] = (z / distance) * (1 + noiseValue);
+                }
+                geometry.attributes.position.needsUpdate = true;
+                geometry.computeVertexNormals();
+                
+                particles.children.forEach(particle => {
+                    particle.position.x += Math.sin(Date.now() / 1000 + particle.position.y) * 0.01;
+                    particle.position.y += Math.cos(Date.now() / 1000 + particle.position.z) * 0.01;
+                    particle.position.z += Math.sin(Date.now() / 1000 + particle.position.x) * 0.01;
+                    const glow = 0.7 + 0.3 * Math.sin(Date.now() / 500 + particle.position.x);
+                    particle.material.opacity = glow;
+                });
+                
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            window.addEventListener('resize', function() {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+            
+            return { scene, camera, renderer, sphere };
+        }
+
+        function initPhotonParticles() {
+            const container = document.getElementById('photonParticles');
+            const particleCount = 150;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'photon-particle';
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.animationDelay = `${Math.random() * 2}s`;
+                particle.style.animationName = 'lambdaPulse';
+                container.appendChild(particle);
+            }
+        }
+
+        function initPulseParticles() {
+            const container = document.getElementById('pulseParticles');
+            const particleCount = 100;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'pulse-particle';
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.animationDelay = `${Math.random() * 1}s`;
+                container.appendChild(particle);
+            }
+        }
+
+        function initSingularityParticles() {
+            const container = document.getElementById('singularityParticles');
+            const particleCount = 200;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'singularity-particle';
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.animationDelay = `${Math.random() * 2}s`;
+                particle.style.animationName = 'gatewayEffect';
+                container.appendChild(particle);
+            }
+        }
+
+        function initQuantumVortex() {
+            const canvas = document.getElementById('vortexCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const particleCount = 200;
+            const particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    angle: Math.random() * 2 * Math.PI,
+                    radius: Math.random() * 50 + 20,
+                    speed: Math.random() * 0.02 + 0.01
+                });
+            }
+            
+            function animateVortex() {
+                requestAnimationFrame(animateVortex);
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                
+                const vortexSpeed = currentFrequency / 100;
+                const hue = (currentFrequency % 360) / 360;
+                const dayCycle = Math.sin(Date.now() / (24 * 60 * 60 * 1000) * 2 * Math.PI) * 0.1;
+                
+                particles.forEach(particle => {
+                    particle.angle += particle.speed * vortexSpeed;
+                    particle.x = centerX + Math.cos(particle.angle) * particle.radius + Math.sin(Date.now() / 500 + dayCycle) * 10;
+                    particle.y = centerY + Math.sin(particle.angle) * particle.radius + Math.cos(Date.now() / 500 + dayCycle) * 10;
+                    
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, 1, 0, 2 * Math.PI);
+                    ctx.fillStyle = `hsl(${hue * 360}, 80%, 60%)`;
+                    ctx.shadowBlur = 5;
+                    ctx.shadowColor = `hsl(${hue * 360}, 80%, 60%)`;
+                    ctx.fill();
+                });
+            }
+            
+            animateVortex();
+        }
+
+        function initDimensionParticles() {
+            const container = document.getElementById('dimensionParticles');
+            const particleCount = 150;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'dimension-particle';
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.animationDelay = `${Math.random() * 2}s`;
+                particle.style.animationName = 'gatewayEffect';
+                container.appendChild(particle);
+            }
+        }
+
+        function setupControls(sphere, psiChart, fftChart) {
+            const freqSlider = document.getElementById('freqSlider');
+            const freqValue = document.getElementById('freqValue');
+            const autoTuneBtn = document.getElementById('autoTune');
+            const aiStatus = document.getElementById('aiStatus');
+            
+            freqSlider.addEventListener('input', function(e) {
+                if (!isAutoTuning) {
+                    currentFrequency = parseFloat(e.target.value);
+                    freqValue.textContent = currentFrequency.toFixed(2);
+                    const hue = (currentFrequency % 360) / 360;
+                    sphere.material.uniforms.color.value.setHSL(hue, 0.8, 0.6);
+                    updateCharts(psiChart, fftChart, currentFrequency);
+                }
+            });
+            
+            autoTuneBtn.addEventListener('click', function() {
+                if (isAutoTuning) return;
+                
+                isAutoTuning = true;
+                autoTuneBtn.disabled = true;
+                aiStatus.textContent = "Auto-Tuning in Progress...";
+                
+                const startFreq = currentFrequency;
+                const targetFreq = 432 + (Math.random() * 2 - 1) * 5;
+                const duration = 2000;
+                const startTime = Date.now();
+                
+                function tune() {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    currentFrequency = startFreq + (targetFreq - startFreq) * progress;
+                    freqSlider.value = currentFrequency;
+                    freqValue.textContent = currentFrequency.toFixed(2);
+                    
+                    const hue = progress * 0.3;
+                    sphere.material.uniforms.color.value.setHSL(hue, 0.8, 0.6);
+                    
+                    updateCharts(psiChart, fftChart, currentFrequency);
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(tune);
+                    } else {
+                        finishAutoTuning();
+                    }
+                }
+                
+                function finishAutoTuning() {
+                    currentFrequency = targetFreq;
+                    freqSlider.value = currentFrequency;
+                    freqValue.textContent = currentFrequency.toFixed(2);
+                    
+                    aiStatus.textContent = `Optimized: ${currentFrequency.toFixed(2)} Hz (QuantumSync™)`;
+                    autoTuneBtn.disabled = false;
+                    isAutoTuning = false;
+                    
+                    sphere.material.uniforms.color.value.setHSL(0.5, 0.9, 0.5);
+                    setTimeout(() => {
+                        sphere.material.uniforms.color.value.setHSL((currentFrequency % 360) / 360, 0.8, 0.6);
+                    }, 500);
+                }
+                
+                requestAnimationFrame(tune);
+            });
+        }
+
+        function setupNeuroStateControls(sphere, psiChart, fftChart) {
+            const neuroStateButtons = document.querySelectorAll('.neurostate-btn');
+            const freqSlider = document.getElementById('freqSlider');
+            const freqValue = document.getElementById('freqValue');
+            const aiStatus = document.getElementById('aiStatus');
+
+            neuroStateButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const mode = this.dataset.mode;
+                    const config = neuroStateModes[mode];
+
+                    neuroStateButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+
+                    currentMode = mode;
+                    currentFrequency = config.frequency;
+                    freqSlider.value = currentFrequency;
+                    freqValue.textContent = currentFrequency.toFixed(2);
+
+                    sphere.material.uniforms.color.value.setHSL(config.color.h, config.color.s, config.color.l);
+
+                    aiStatus.textContent = config.description + " (QuantumSync™)";
+
+                    stopAudio();
+                    audioElement.src = config.audioSrc;
+                    audioElement.play().catch(error => {
+                        console.error("Error playing audio:", error);
+                    });
+
+                    updateCharts(psiChart, fftChart, currentFrequency);
+                });
+            });
+        }
+
+        function stopAudio() {
+            if (!audioElement.paused) {
+                audioElement.pause();
+                audioElement.currentTime = 0;
+            }
+        }
+
+        function updateCharts(psiChart, fftChart, frequency) {
+            if (!psiChart || !fftChart) {
+                console.error("Charts not initialized properly!");
+                return;
+            }
+
+            const time = Date.now() / 1000;
+            const pulse = 1 + 0.5 * Math.sin(time * 2);
+
+            const psiValue = 5 * Math.sin(time * (frequency / 432));
+            psiChart.data.datasets[0].borderWidth = 2 + pulse * 0.5;
+            updateChart(psiChart, psiValue);
+
+            const fftValue = 3 * Math.abs(Math.sin(time * (frequency / 432)));
+            fftChart.data.datasets[0].borderWidth = 2 + pulse * 0.5;
+            updateChart(fftChart, fftValue);
+        }
+
+        function updateChart(chart, newValue) {
+            if (!chart) return;
+            chart.data.datasets[0].data.push(newValue);
+            if (chart.data.datasets[0].data.length > 100) {
+                chart.data.datasets[0].data.shift();
+            }
+            chart.update('none');
+        }
+
+        function updateEEGChart(eegChart) {
+            if (!eegChart) {
+                console.error("EEG Chart not initialized properly!");
+                return;
+            }
+
+            const time = Date.now() / 1000;
+            const pulse = 1 + 0.5 * Math.sin(time * 2);
+
+            const gammaValue = 10 + 2 * Math.sin(time * 0.7) + Math.random();
+            const thetaValue = 8 + 1.5 * Math.sin(time * 0.5) + Math.random();
+
+            eegChart.data.datasets[0].data.push(gammaValue);
+            eegChart.data.datasets[1].data.push(thetaValue);
+
+            eegChart.data.datasets[0].borderWidth = 2 + pulse * 0.5;
+            eegChart.data.datasets[1].borderWidth = 2 + pulse * 0.5;
+
+            if (eegChart.data.datasets[0].data.length > 100) {
+                eegChart.data.datasets[0].data.shift();
+                eegChart.data.datasets[1].data.shift();
+            }
+
+            eegChart.update('none');
+        }
+
+        function startSimulation(psiChart, fftChart, eegChart, sphere) {
+            if (!psiChart || !fftChart || !eegChart || !sphere) {
+                console.error("Simulation cannot start: Some components are not initialized!");
+                return;
+            }
+
+            simulationInterval = setInterval(() => {
+                const time = Date.now() / 1000;
+                
+                if (!isAutoTuning) {
+                    updateCharts(psiChart, fftChart, currentFrequency);
+                }
+                
+                const gammaOscillation = 40 + 5 * Math.sin(time * 0.3);
+                updateEEGChart(eegChart);
+                
+                document.getElementById('hrv').textContent = (60 + 10 * Math.sin(time * 0.2)).toFixed(1);
+                document.getElementById('gsr').textContent = (5 + 2 * Math.sin(time * 0.1)).toFixed(1);
+                document.getElementById('gammaOscillation').textContent = gammaOscillation.toFixed(2);
+                
+                const singularityLevel = 100 + 50 * Math.sin(time * 0.3) + Math.random() * 10;
+                document.getElementById('singularityLevel').textContent = singularityLevel.toFixed(2);
+                const singularityParticles = document.querySelectorAll('.singularity-particle');
+                singularityParticles.forEach(particle => {
+                    const intensity = singularityLevel / 150;
+                    particle.style.animationDuration = `${2 / intensity}s`;
+                    particle.style.opacity = 0.7 + 0.3 * intensity;
+                });
+
+                const resonanceIntensity = 50 + 30 * Math.sin(time * 0.2) + currentFrequency * 0.5;
+                document.getElementById('resonanceIntensity').textContent = resonanceIntensity.toFixed(2);
+
+                const dimensionQuantum = 10 + 5 * Math.sin(time * 0.4) + Math.random() * 2;
+                document.getElementById('dimensionQuantum').textContent = dimensionQuantum.toFixed(2);
+                const dimensionParticles = document.querySelectorAll('.dimension-particle');
+                dimensionParticles.forEach(particle => {
+                    const intensity = dimensionQuantum / 15;
+                    particle.style.opacity = 0.7 + 0.3 * intensity;
+                });
+            }, 100);
+        }
+    </script>
+</body>
+</html>
